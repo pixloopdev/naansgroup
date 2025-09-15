@@ -1,0 +1,124 @@
+# PropX API Documentation
+
+This document provides a summary of the API endpoints available in the PropX application.
+
+## Base URL
+
+All API endpoints are accessed via `api.php`.
+
+## Authentication
+
+All endpoints require the user to be logged in. The application uses session-based authentication. A CSRF token is also required for all `POST` requests.
+
+## Endpoints
+
+### Data Retrieval
+
+*   **`GET /api.php?action=get_all_data`**
+    *   Retrieves all initial data for the application, including properties, tenants, payments, expenses, and reminders.
+
+*   **`GET /api.php?action=get_cheques`**
+    *   Retrieves a list of all scheduled cheques.
+    *   Optional query parameter: `propertyId` to filter by property.
+
+*   **`GET /api.php?action=get_settings`**
+    *   Retrieves application settings from the `.env` file.
+
+*   **`POST /api.php?action=get_report`**
+    *   Generates a financial report for a given date range.
+    *   **Body (JSON):** `{ "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "propertyId": (optional) }`
+
+### Property Management
+
+*   **`POST /api.php?action=add_property`**
+    *   Adds a new property.
+    *   **Body (JSON or multipart/form-data):** `{ "name": "...", "address": "...", ... }`
+
+*   **`POST /api.php?action=update_property`**
+    *   Updates an existing property.
+    *   **Body (JSON or multipart/form-data):** `{ "id": "...", "name": "...", "address": "...", ... }`
+
+*   **`POST /api.php?action=delete_property`**
+    *   Deletes a property.
+    *   **Body (JSON):** `{ "id": "..." }`
+
+### Bedspace Management
+
+*   **`POST /api.php?action=add_bedspace`**
+    *   Adds a new bedspace or room to a property.
+    *   **Body (JSON):** `{ "propertyId": "...", "name": "...", "type": "bedspace" | "room" }`
+
+*   **`POST /api.php?action=edit_bedspace`**
+    *   Edits an existing bedspace.
+    *   **Body (JSON):** `{ "propertyId": "...", "bedspaceIndex": "...", "name": "..." }`
+
+*   **`POST /api.php?action=delete_bedspace`**
+    *   Deletes a bedspace from a property.
+    *   **Body (JSON):** `{ "propertyId": "...", "bedspaceIndex": "..." }`
+
+### Tenant Management
+
+*   **`POST /api.php?action=add_tenant`**
+    *   Adds a new tenant.
+    *   **Body (JSON):** `{ "name": "...", "email": "...", "propertyId": "...", ... }`
+
+*   **`POST /api.php?action=update_tenant`**
+    *   Updates an existing tenant.
+    *   **Body (JSON):** `{ "id": "...", "name": "...", "email": "...", ... }`
+
+*   **`POST /api.php?action=delete_tenant`**
+    *   Deletes a tenant.
+    *   **Body (JSON):** `{ "id": "..." }`
+
+### Financial Management
+
+*   **`POST /api.php?action=add_payment`**
+    *   Records a new payment from a tenant.
+    *   **Body (JSON):** `{ "tenantId": "...", "amount": "...", "date": "..." }`
+
+*   **`POST /api.php?action=add_expense`**
+    *   Records a new expense.
+    *   **Body (JSON):** `{ "description": "...", "amount": "...", "date": "..." }`
+
+*   **`POST /api.php?action=update_expense`**
+    *   Updates an existing expense.
+    *   **Body (JSON):** `{ "id": "...", "description": "...", "amount": "...", ... }`
+
+*   **`POST /api.php?action=delete_expense`**
+    *   Deletes an expense.
+    *   **Body (JSON):** `{ "id": "..." }`
+
+*   **`POST /api.php?action=add_common_expense`**
+    *   Records a new common expense.
+    *   **Body (JSON):** `{ "description": "...", "amount": "...", "date": "..." }`
+
+*   **`POST /api.php?action=update_common_expense`**
+    *   Updates a common expense.
+    *   **Body (JSON):** `{ "id": "...", "description": "...", "amount": "...", ... }`
+
+*   **`POST /api.php?action=delete_common_expense`**
+    *   Deletes a common expense.
+    *   **Body (JSON):** `{ "id": "..." }`
+
+*   **`POST /api.php?action=add_cheque`**
+    *   Adds a new scheduled cheque.
+    *   **Body (JSON):** `{ "propertyId": "...", "scheduledAmount": "...", "scheduledDate": "..." }`
+
+*   **`POST /api.php?action=update_cheque_status`**
+    *   Updates the status of a cheque.
+    *   **Body (JSON):** `{ "id": "...", "status": "pending" | "received" | "cleared" | "bounced" }`
+
+### System & Data Management
+
+*   **`GET /api.php?action=backup_db`**
+    *   Downloads a backup of the SQLite database file.
+
+*   **`POST /api.php?action=import_demo`**
+    *   Imports demo data into the application.
+
+*   **`POST /api.php?action=reset_data`**
+    *   Deletes all data from the database.
+
+*   **`POST /api.php?action=save_settings`**
+    *   Saves application settings to the `.env` file.
+    *   **Body (JSON):** `{ "appTitle": "...", "currencyCode": "...", "countryCode": "...", "openingBalance": "..." }`

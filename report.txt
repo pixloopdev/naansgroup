@@ -1,0 +1,73 @@
+Project Analysis Report
+
+Overview
+- App type: Single‑page PHP app for property management.
+- Stack: PHP 8.1, SQLite, Tailwind CSS, vanilla JavaScript.
+- Auth: Session login via .env credentials.
+- Data: Stored in propertymanagement.sqlite with backup/reset/import endpoints.
+
+Key Files
+- index.php: SPA UI, navigation/views, fetches api.php with CSRF on POST.
+- api.php: All endpoints + DB schema + business logic in one file.
+- login.php: Reads .env for credentials; sets session; no CSRF for login.
+- .env: Stores USERNAME, PASSWORD, and app settings in plain text.
+- .htaccess: PHP handler only; lacks hardening rules.
+- demo_data.php: Inserts demo properties/tenants/payments/expenses.
+- uploads/documents: Stores uploaded PDFs referenced by properties.
+
+Data Model
+- Tables: properties, tenants, payments, expenses, common_expenses, expense_categories, payment_schedules.
+- Notables:
+  - properties.bedspaces: JSON array stored in TEXT.
+  - Cheque schedules tracked in payment_schedules.
+  - Demo data seeds core entities.
+
+API Surface
+- GET get_all_data: Aggregates properties/tenants/payments/expenses/cheques/reminders.
+- CRUD endpoints: add/update/delete for properties, tenants, expenses, common expenses, cheques.
+- POST get_report: Income/expense report by date range (optional property filter).
+- GET backup_db: Sends SQLite file as download (auth required).
+- POST import_demo / POST reset_data: Demo import and full reset.
+- GET/POST get_settings/save_settings: Reads/writes .env settings.
+- CSRF: Required via X-CSRF-Token for POST requests.
+
+Runtime/Behavior
+- index.php creates CSRF token in session; JS attaches it on POST.
+- UI includes actions for Database Backup, Import Demo Data, Reset All Data.
+- File uploads: Property document PDFs saved under uploads/documents with basic MIME/extension checks.
+
+Security Observations
+- Plaintext credentials: .env stores USERNAME/PASSWORD un-hashed. Prefer hashed passwords in a users table.
+- No CSRF on login: login.php lacks CSRF validation; add token to form and verify.
+- Session fixation: No session_regenerate_id(true) after login; add it.
+- Error leakage: api.php enables display_errors; disable in production.
+- .env exposure: No deny rules; add .htaccess to block access.
+- Uploads hardening: No max size limits or deeper validation; add size cap and content checks; disallow script execution in uploads/.
+- Backup endpoint uses GET: Consider POST with CSRF or a one-time token.
+- Cookie flags: Ensure HttpOnly, Secure, and SameSite on session cookies.
+
+Notable Bugs / Code Quality
+- Missing function: add_dummy_data is called (api.php, regenerate_db.php) but not defined; likely should call insert_demo_data.
+- Duplicate functions in api.php: e.g., handle_save_settings and cheque handlers appear twice; remove duplicates to avoid drift.
+- Naive .env parsing/writing: env_write_assoc writes raw values without quoting; special characters may break formatting.
+- Monolithic api.php: Consider splitting handlers/helpers into separate includes for maintainability.
+
+Suggested Improvements
+- Auth hardening:
+  - Use users table with bcrypt/Argon2 hashed passwords; migrate away from .env credentials.
+  - Add CSRF to login form and validate server-side.
+  - Regenerate session ID on login; set strict cookie flags.
+- Production config:
+  - Disable display_errors; enable error logging only.
+  - Add .htaccess rules to deny access to .env and prevent script execution in uploads/; set Options -Indexes.
+- File uploads:
+  - Add max file size check, verify PDF magic numbers, randomize filenames further.
+- API/UX:
+  - Change backup_db to POST with CSRF or use one-time token.
+  - Replace add_dummy_data calls with insert_demo_data or implement wrapper.
+  - Remove duplicate functions in api.php; factor common code.
+- Code structure:
+  - Extract DB setup/schema, handlers, and helpers into separate files.
+  - Introduce a small router to map actions to handlers.
+  - Add lightweight tests for rent reminders and reports.
+
